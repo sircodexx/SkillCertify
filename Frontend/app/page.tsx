@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
   Award,
   BookOpen,
@@ -52,40 +53,49 @@ export default function Home() {
     phone: "",
     company: "",
   })
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [activeTab, setActiveTab] = useState("login")
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
-    // Simulación de autenticación
-    setTimeout(() => {
-      if (loginData.email === "admin@skillcertify.pe" && loginData.password === "admin123") {
-        setCurrentUser({
-          id: 1,
-          name: "Administrador",
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           email: loginData.email,
-          role: "ADMIN",
-        })
-      } else if (loginData.email === "usuario@skillcertify.pe" && loginData.password === "user123") {
-        setCurrentUser({
-          id: 2,
-          name: "Juan Pérez",
-          email: loginData.email,
-          role: "NORMAL",
-        })
-      } else if (loginData.email && loginData.password) {
-        setCurrentUser({
-          id: 3,
-          name: loginData.email.split("@")[0],
-          email: loginData.email,
-          role: "NORMAL",
-        })
-      } else {
-        setError("Credenciales inválidas. Usa admin@skillcertify.pe/admin123 o usuario@skillcertify.pe/user123")
+          password: loginData.password,
+        }),
+      })
+
+      if (!response.ok) {
+        let errorMsg = "Credenciales inválidas"
+        try {
+          const errorData = await response.json()
+          errorMsg = errorData.message || errorMsg
+        } catch {}
+        setError(errorMsg)
+        setIsLoading(false)
+        return
       }
+
+      const data = await response.json()
+      setCurrentUser({
+        id: Date.now(), // El backend no devuelve id
+        name: data.name,
+        email: data.email,
+        role: data.role,
+      })
       setIsLoading(false)
-    }, 1000)
+    } catch (err) {
+      setError("Error de red o servidor")
+      setIsLoading(false)
+    }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -99,16 +109,44 @@ export default function Home() {
       return
     }
 
-    // Simulación de registro
-    setTimeout(() => {
-      setCurrentUser({
-        id: Date.now(),
-        name: registerData.name,
-        email: registerData.email,
-        role: "NORMAL",
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: registerData.name,
+          email: registerData.email,
+          password: registerData.password,
+          phone: registerData.phone,
+          company: registerData.company,
+        }),
       })
+
+      if (!response.ok) {
+        let errorMsg = "Error al registrar"
+        try {
+          const errorData = await response.json()
+          errorMsg = errorData.message || errorMsg
+        } catch {}
+        setError(errorMsg)
+        setIsLoading(false)
+        return
+      }
+
+      // Registro exitoso: mostrar animación y cambiar a login
+      setShowSuccess(true)
+      setRegisterData({ name: "", email: "", password: "", confirmPassword: "", phone: "", company: "" })
+      setTimeout(() => {
+        setShowSuccess(false)
+        setActiveTab("login")
+      }, 2000)
       setIsLoading(false)
-    }, 1000)
+    } catch (err) {
+      setError("Error de red o servidor")
+      setIsLoading(false)
+    }
   }
 
   const handleLogout = () => {
@@ -123,7 +161,16 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <>
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent className="flex flex-col items-center justify-center gap-4 max-w-xs">
+          <div className="bg-green-100 rounded-full p-4 mb-2">
+            <CheckCircle className="h-10 w-10 text-green-600" />
+          </div>
+          <p className="text-green-700 font-semibold text-center">¡Registro exitoso! Ahora puedes iniciar sesión.</p>
+        </DialogContent>
+      </Dialog>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -249,7 +296,7 @@ export default function Home() {
                   </Alert>
                 )}
 
-                <Tabs defaultValue="login" className="space-y-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                     <TabsTrigger value="register">Registrarse</TabsTrigger>
@@ -291,18 +338,6 @@ export default function Home() {
                         {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                       </Button>
                     </form>
-
-                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                      <p className="text-sm font-medium text-blue-800 mb-2">Cuentas de prueba:</p>
-                      <div className="space-y-1 text-xs text-blue-700">
-                        <p>
-                          <strong>Admin:</strong> admin@skillcertify.pe / admin123
-                        </p>
-                        <p>
-                          <strong>Usuario:</strong> usuario@skillcertify.pe / user123
-                        </p>
-                      </div>
-                    </div>
                   </TabsContent>
 
                   <TabsContent value="register">
@@ -612,5 +647,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </>
   )
 }
