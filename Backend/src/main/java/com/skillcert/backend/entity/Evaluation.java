@@ -1,8 +1,10 @@
 package com.skillcert.backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
+@Data
 public class Evaluation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,11 +17,24 @@ public class Evaluation {
 
     @ManyToOne
     private Category category;
+    @JoinColumn(name = "prerequisite_evaluation_id")
+    private Evaluation prerequisiteEvaluation;
 
     @Enumerated(EnumType.STRING)
+    private EvaluationStatus status;
     private Difficulty difficulty;
+    private Integer maxAttempts;
+    private Boolean timeLimitEnabled;
 
-    // Getters y setters (puedes usar Lombok si lo prefieres)
+    public enum EvaluationStatus {
+        ACTIVE, INACTIVE
+    }
+    public Integer getMaxAttempts() {
+    return maxAttempts;
+    }
+    public Evaluation getPrerequisiteEvaluation() {
+    return prerequisiteEvaluation;
+    }
 
     public Long getId() { return id; }
     public String getTitle() { return title; }
@@ -28,4 +43,5 @@ public class Evaluation {
     public Integer getPassingScore() { return passingScore; }
     public Category getCategory() { return category; }
     public Difficulty getDifficulty() { return difficulty; }
+    public EvaluationStatus getStatus() {return status; }
 }
