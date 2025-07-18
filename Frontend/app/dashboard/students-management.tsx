@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -47,58 +47,141 @@ interface Center {
 }
 
 export default function StudentsManagement() {
-  const [students, setStudents] = useState<Student[]>([
-    {
-      id: 1,
-      name: "Juan Carlos Pérez",
-      email: "juan.perez@email.com",
-      phone: "+51 987 654 321",
-      dni: "12345678",
-      birthDate: "1995-03-15",
-      centerId: 1,
-      centerName: "Centro Lima Norte",
-      enrollmentDate: "2024-01-15",
-      status: "Activo",
-      completedEvaluations: 5,
-      certificates: 3,
-      averageScore: 85,
-    },
-    {
-      id: 2,
-      name: "María González López",
-      email: "maria.gonzalez@email.com",
-      phone: "+51 987 123 456",
-      dni: "87654321",
-      birthDate: "1992-07-22",
-      centerId: 1,
-      centerName: "Centro Lima Norte",
-      enrollmentDate: "2024-01-10",
-      status: "Activo",
-      completedEvaluations: 8,
-      certificates: 6,
-      averageScore: 92,
-    },
-    {
-      id: 3,
-      name: "Carlos Mendoza Quispe",
-      email: "carlos.mendoza@email.com",
-      phone: "+51 954 789 123",
-      dni: "11223344",
-      birthDate: "1988-11-08",
-      centerId: 2,
-      centerName: "Centro Arequipa",
-      enrollmentDate: "2024-01-05",
-      status: "Graduado",
-      completedEvaluations: 12,
-      certificates: 10,
-      averageScore: 88,
-    },
-  ])
+  // Variable para simular vista de admin
+  const isAdmin = true;
+  const [students, setStudents] = useState<Student[]>(
+    isAdmin
+      ? [
+          {
+            id: 1,
+            name: "Lucia Lopez",
+            email: "lucia@unp.com",
+            phone: "985111257",
+            dni: "23456789",
+            birthDate: "2001-02-02",
+            centerId: 2,
+            centerName: "Universidad Nacional de Piura",
+            enrollmentDate: "2025-07-04T04:23:25.355203",
+            status: "Activo",
+            completedEvaluations: 15,
+            certificates: 2,
+            averageScore: 95,
+          },
+          {
+            id: 2,
+            name: "Daniel Ruiz",
+            email: "daniel@ucv.com",
+            phone: "985623444",
+            dni: "34567890",
+            birthDate: "2002-03-03",
+            centerId: 3,
+            centerName: "Universidad Cesar Vallejo",
+            enrollmentDate: "2025-07-04T04:36:53.807957",
+            status: "Activo",
+            completedEvaluations: 12,
+            certificates: 1,
+            averageScore: 90,
+          },
+          {
+            id: 3,
+            name: "Juan Martinez",
+            email: "juan@udep.com",
+            phone: "984125487",
+            dni: "12345678",
+            birthDate: "2000-01-01",
+            centerId: 1,
+            centerName: "Universidad de Piura",
+            enrollmentDate: "2025-07-04T04:20:23.118600",
+            status: "Activo",
+            completedEvaluations: 10,
+            certificates: 1,
+            averageScore: 85,
+          },
+        ]
+      : [
+          {
+            id: 5,
+            name: "Juan Martinez",
+            email: "juan@udep.com",
+            phone: "984125487",
+            dni: "12345678",
+            birthDate: "2000-01-01",
+            centerId: 1,
+            centerName: "Universidad de Piura",
+            enrollmentDate: "2025-07-04T04:20:23.118600",
+            status: "Activo",
+            completedEvaluations: 0,
+            certificates: 0,
+            averageScore: 0,
+          },
+          {
+            id: 6,
+            name: "Lucia Lopez",
+            email: "lucia@unp.com",
+            phone: "985111257",
+            dni: "23456789",
+            birthDate: "2001-02-02",
+            centerId: 2,
+            centerName: "Universidad Nacional de Piura",
+            enrollmentDate: "2025-07-04T04:23:25.355203",
+            status: "Activo",
+            completedEvaluations: 0,
+            certificates: 0,
+            averageScore: 0,
+          },
+          {
+            id: 7,
+            name: "Daniel Ruiz",
+            email: "daniel@ucv.com",
+            phone: "985623444",
+            dni: "34567890",
+            birthDate: "2002-03-03",
+            centerId: 3,
+            centerName: "Universidad Cesar Vallejo",
+            enrollmentDate: "2025-07-04T04:36:53.807957",
+            status: "Activo",
+            completedEvaluations: 0,
+            certificates: 0,
+            averageScore: 0,
+          },
+          {
+            id: 8,
+            name: "Adrian Diaz",
+            email: "adrian@unp.com",
+            phone: "985236147",
+            dni: "45678901",
+            birthDate: "2003-04-04",
+            centerId: 2,
+            centerName: "Universidad Nacional de Piura",
+            enrollmentDate: "2025-07-04T13:48:50.981394",
+            status: "Activo",
+            completedEvaluations: 0,
+            certificates: 0,
+            averageScore: 0,
+          },
+          {
+            id: 9,
+            name: "Andres",
+            email: "andres@utp.com",
+            phone: "952142784",
+            dni: "56789012",
+            birthDate: "2004-05-05",
+            centerId: 4,
+            centerName: "Universidad Tecnologica del Peru",
+            enrollmentDate: "2025-07-18T05:10:47.293069",
+            status: "Activo",
+            completedEvaluations: 0,
+            certificates: 0,
+            averageScore: 0,
+          },
+        ]
+  );
 
   const [centers] = useState<Center[]>([
-    { id: 1, name: "Centro Lima Norte" },
-    { id: 2, name: "Centro Arequipa" },
-    { id: 3, name: "Centro Cusco" },
+    { id: 1, name: "Universidad de Piura" },
+    { id: 2, name: "Universidad Nacional de Piura" },
+    { id: 3, name: "Universidad Cesar Vallejo" },
+    { id: 4, name: "Universidad Tecnologica del Peru" },
   ])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -250,13 +333,13 @@ export default function StudentsManagement() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Estudiantes</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Participantes</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{students.length}</div>
+            <div className="text-2xl font-bold">{isAdmin ? 10 : students.length}</div>
             <p className="text-xs text-muted-foreground">
-              {students.filter((s) => s.status === "Activo").length} activos
+              {isAdmin ? 10 : students.filter((s) => s.status === "Activo").length} activos
             </p>
           </CardContent>
         </Card>
@@ -269,7 +352,7 @@ export default function StudentsManagement() {
           <CardContent>
             <div className="text-2xl font-bold">{students.filter((s) => s.status === "Graduado").length}</div>
             <p className="text-xs text-muted-foreground">
-              {Math.round((students.filter((s) => s.status === "Graduado").length / students.length) * 100)}% del total
+              {students.length > 0 ? Math.round((students.filter((s) => s.status === "Graduado").length / students.length) * 100) : 0}% del total
             </p>
           </CardContent>
         </Card>
@@ -285,18 +368,20 @@ export default function StudentsManagement() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Promedio General</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(students.reduce((acc, s) => acc + s.averageScore, 0) / students.length)}%
-            </div>
-            <p className="text-xs text-muted-foreground">Puntuación promedio</p>
-          </CardContent>
-        </Card>
+        {!isAdmin && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Promedio General</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {Math.round(students.reduce((acc, s) => acc + s.averageScore, 0) / students.length)}%
+              </div>
+              <p className="text-xs text-muted-foreground">Puntuación promedio</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Filters */}

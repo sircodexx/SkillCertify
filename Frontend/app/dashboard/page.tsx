@@ -60,8 +60,8 @@ interface Evaluation {
   difficulty: "Básico" | "Intermedio" | "Avanzado"
   status: "Activa" | "Inactiva"
   completions: number
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
   prerequisiteEvaluationId?: number
   passingScore: number
 }
@@ -974,6 +974,7 @@ export default function Dashboard({ userRole, currentUser, onLogout }: Dashboard
             <TabsContent value="take-evaluation">
               <EvaluationTaker
                 evaluation={selectedEvaluation}
+                userId={currentUser?.id}
                 onComplete={handleEvaluationComplete}
                 onCancel={() => {
                   setSelectedEvaluation(null)

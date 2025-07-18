@@ -1,5 +1,7 @@
 "use client"
 
+
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -37,13 +39,46 @@ interface Evaluation {
   passingScore: number
 }
 
+interface Attempt {
+  id: number
+  evaluationId: number
+  userId: number
+  score: number
+  maxScore: number
+  percentage: number
+  certified: boolean
+  timeSpent: number
+  createdAt: string
+}
+
 interface EvaluationTakerProps {
   evaluation: Evaluation
+  userId: number
   onComplete: (result: any) => void
   onCancel: () => void
 }
 
-export default function EvaluationTaker({ evaluation, onComplete, onCancel }: EvaluationTakerProps) {
+export default function EvaluationTaker({ evaluation, userId, onComplete, onCancel }: EvaluationTakerProps) {
+  // Estado para mostrar detalle de intento (debe estar dentro del componente)
+  const [selectedAttempt, setSelectedAttempt] = useState<Attempt | null>(null)
+  const [attemptDetail, setAttemptDetail] = useState<any>(null)
+  const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [loadingDetail, setLoadingDetail] = useState(false)
+  // Estado para intentos previos
+  const [attempts, setAttempts] = useState<Attempt[]>([])
+  const [loadingAttempts, setLoadingAttempts] = useState(true)
+
+  // Consultar intentos previos del usuario al montar el componente
+  useEffect(() => {
+    fetch(`/api/attempts/user/${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Filtrar solo los intentos de la evaluación actual
+        setAttempts(data.filter((a: Attempt) => a.evaluationId === evaluation.id))
+        setLoadingAttempts(false)
+      })
+      .catch(() => setLoadingAttempts(false))
+  }, [userId, evaluation.id])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<{ [key: number]: string | number }>({})
   const [timeLeft, setTimeLeft] = useState(evaluation.duration * 60) // en segundos
@@ -54,80 +89,107 @@ export default function EvaluationTaker({ evaluation, onComplete, onCancel }: Ev
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set())
   const [showReview, setShowReview] = useState(false)
 
-  // Preguntas de ejemplo para la evaluación
-  const [questions] = useState<Question[]>([
-    {
-      id: 1,
-      text: "¿Cuál es la diferencia principal entre let y var en JavaScript?",
-      type: "multiple-choice",
-      options: [
-        "No hay diferencia significativa",
-        "let tiene scope de bloque, var tiene scope de función",
-        "var es más moderno que let",
-        "let solo funciona en modo estricto",
-      ],
-      correctAnswer: 1,
-      points: 5,
-    },
-    {
-      id: 2,
-      text: "¿JavaScript es un lenguaje de programación orientado a objetos?",
-      type: "true-false",
-      options: ["Verdadero", "Falso"],
-      correctAnswer: 0,
-      points: 3,
-    },
-    {
-      id: 3,
-      text: "¿Cuál de los siguientes métodos se usa para agregar un elemento al final de un array?",
-      type: "multiple-choice",
-      options: ["push()", "pop()", "shift()", "unshift()"],
-      correctAnswer: 0,
-      points: 4,
-    },
-    {
-      id: 4,
-      text: "¿El operador === compara tanto valor como tipo de dato?",
-      type: "true-false",
-      options: ["Verdadero", "Falso"],
-      correctAnswer: 0,
-      points: 3,
-    },
-    {
-      id: 5,
-      text: "¿Cuál es la forma correcta de declarar una función en JavaScript?",
-      type: "multiple-choice",
-      options: ["function myFunction() {}", "def myFunction() {}", "func myFunction() {}", "method myFunction() {}"],
-      correctAnswer: 0,
-      points: 4,
-    },
-    {
-      id: 6,
-      text: "¿JavaScript puede ejecutarse tanto en el navegador como en el servidor?",
-      type: "true-false",
-      options: ["Verdadero", "Falso"],
-      correctAnswer: 0,
-      points: 3,
-    },
-    {
-      id: 7,
-      text: "¿Qué método se utiliza para convertir un string a número entero?",
-      type: "multiple-choice",
-      options: ["parseInt()", "parseFloat()", "Number()", "toString()"],
-      correctAnswer: 0,
-      points: 4,
-    },
-    {
-      id: 8,
-      text: "¿Los arrays en JavaScript pueden contener elementos de diferentes tipos?",
-      type: "true-false",
-      options: ["Verdadero", "Falso"],
-      correctAnswer: 0,
-      points: 3,
-    },
-  ])
+  // Preguntas estáticas por evaluación
+  const getStaticQuestions = (evaluationId: number): Question[] => {
+    switch (evaluationId) {
+      case 1:
+        return [
+          {
+            id: 1,
+            text: "¿Cuál es la capital de Perú?",
+            type: "multiple-choice",
+            options: ["Lima", "Cusco", "Arequipa", "Trujillo"],
+            correctAnswer: "Lima",
+            points: 1,
+          },
+          {
+            id: 2,
+            text: "¿En qué año se independizó Perú?",
+            type: "multiple-choice",
+            options: ["1821", "1810", "1824", "1830"],
+            correctAnswer: "1821",
+            points: 1,
+          },
+          {
+            id: 3,
+            text: "¿El océano Pacífico está al oeste de Perú?",
+            type: "true-false",
+            correctAnswer: "true",
+            points: 1,
+          },
+        ];
+      case 2:
+        return [
+          {
+            id: 1,
+            text: "¿Cuál es el río más largo de Perú?",
+            type: "multiple-choice",
+            options: ["Amazonas", "Rímac", "Mantaro", "Urubamba"],
+            correctAnswer: "Amazonas",
+            points: 1,
+          },
+          {
+            id: 2,
+            text: "¿Cuál es la moneda oficial de Perú?",
+            type: "multiple-choice",
+            options: ["Sol", "Peso", "Dólar", "Euro"],
+            correctAnswer: "Sol",
+            points: 1,
+          },
+        ];
+      case 3:
+        return [
+          {
+            id: 1,
+            text: "¿En qué departamento está Machu Picchu?",
+            type: "multiple-choice",
+            options: ["Cusco", "Lima", "Arequipa", "Piura"],
+            correctAnswer: "Cusco",
+            points: 1,
+          },
+          {
+            id: 2,
+            text: "¿El lago Titicaca es compartido con Bolivia?",
+            type: "true-false",
+            correctAnswer: "true",
+            points: 1,
+          },
+        ];
+      default:
+        return [
+          {
+            id: 1,
+            text: "Pregunta genérica 1",
+            type: "multiple-choice",
+            options: ["A", "B", "C", "D"],
+            correctAnswer: "A",
+            points: 1,
+          },
+        ];
+    }
+  };
 
-  const currentQuestion = questions[currentQuestionIndex]
+  const [questions, setQuestions] = useState<Question[]>(getStaticQuestions(evaluation.id));
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
+  const [noQuestions, setNoQuestions] = useState(false)
+
+  // Consultar preguntas de la evaluación al montar el componente
+  useEffect(() => {
+    setLoadingQuestions(true)
+    fetch(`/api/evaluations/${evaluation.id}/questions`)
+      .then((res) => res.json())
+      .then((data) => {
+        setQuestions(Array.isArray(data) ? data : [])
+        setNoQuestions(!Array.isArray(data) || data.length === 0)
+        setLoadingQuestions(false)
+      })
+      .catch(() => {
+        setQuestions([])
+        setNoQuestions(true)
+        setLoadingQuestions(false)
+      })
+  }, [evaluation.id])
+
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100
   const answeredQuestions = Object.keys(answers).length
 
@@ -159,6 +221,7 @@ export default function EvaluationTaker({ evaluation, onComplete, onCancel }: Ev
   }
 
   const handleAnswer = (value: string | number) => {
+    const currentQuestion = questions[currentQuestionIndex]
     setAnswers({ ...answers, [currentQuestion.id]: value })
   }
 
@@ -176,10 +239,11 @@ export default function EvaluationTaker({ evaluation, onComplete, onCancel }: Ev
 
   const handleFlag = () => {
     const newFlagged = new Set(flaggedQuestions)
-    if (newFlagged.has(currentQuestion.id)) {
-      newFlagged.delete(currentQuestion.id)
+    const currentQuestionId = questions[currentQuestionIndex].id
+    if (newFlagged.has(currentQuestionId)) {
+      newFlagged.delete(currentQuestionId)
     } else {
-      newFlagged.add(currentQuestion.id)
+      newFlagged.add(currentQuestionId)
     }
     setFlaggedQuestions(newFlagged)
   }
@@ -276,7 +340,11 @@ export default function EvaluationTaker({ evaluation, onComplete, onCancel }: Ev
               <div className="p-4 bg-gray-50 rounded-lg">
                 <CheckCircle className="h-6 w-6 mx-auto mb-2 text-green-600" />
                 <p className="font-medium">Preguntas</p>
-                <p className="text-sm text-gray-600">{questions.length} preguntas</p>
+                {loadingQuestions ? (
+                  <p className="text-sm text-gray-600">Cargando preguntas...</p>
+                ) : (
+                  <p className="text-sm text-gray-600">{questions.length} preguntas</p>
+                )}
               </div>
               <div className="p-4 bg-gray-50 rounded-lg">
                 <Award className="h-6 w-6 mx-auto mb-2 text-purple-600" />
@@ -305,7 +373,90 @@ export default function EvaluationTaker({ evaluation, onComplete, onCancel }: Ev
               </AlertDescription>
             </Alert>
 
-            <div className="flex justify-center space-x-4">
+            {/* Mostrar intentos previos reales del usuario */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-2">Tus intentos previos</h3>
+              {loadingAttempts ? (
+                <p className="text-gray-500">Cargando intentos...</p>
+              ) : attempts.length === 0 ? (
+                <p className="text-gray-500">No tienes intentos previos para esta evaluación.</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {attempts.map((attempt) => (
+                      <Card key={attempt.id} className="border">
+                        <CardHeader>
+                          <CardTitle>Intento #{attempt.id}</CardTitle>
+                          <CardDescription>
+                            Fecha: {new Date(attempt.createdAt).toLocaleString("es-PE")}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex justify-between items-center">
+                            <span>Puntaje: <strong>{attempt.score}/{attempt.maxScore}</strong></span>
+                            <span>{attempt.percentage}%</span>
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <span>{attempt.certified ? "Certificado" : "No certificado"}</span>
+                            <span>Tiempo: {attempt.timeSpent} min</span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={async () => {
+                              setSelectedAttempt(attempt)
+                              setShowDetailDialog(true)
+                              setLoadingDetail(true)
+                              const res = await fetch(`/api/attempts/${attempt.id}/results`)
+                              if (res.ok) {
+                                setAttemptDetail(await res.json())
+                              } else {
+                                setAttemptDetail({ error: "No se pudo obtener el detalle" })
+                              }
+                              setLoadingDetail(false)
+                            }}
+                          >
+                            Ver Detalle
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Detalle del Intento</DialogTitle>
+                        <DialogDescription>
+                          {selectedAttempt && (
+                            <div>
+                              <div>Intento #{selectedAttempt.id}</div>
+                              <div>Fecha: {new Date(selectedAttempt.createdAt).toLocaleString("es-PE")}</div>
+                            </div>
+                          )}
+                        </DialogDescription>
+                      </DialogHeader>
+                      {loadingDetail ? (
+                        <p className="text-gray-500">Cargando detalle...</p>
+                      ) : attemptDetail ? (
+                        <pre className="bg-gray-100 p-4 rounded text-xs overflow-x-auto">
+                          {JSON.stringify(attemptDetail, null, 2)}
+                        </pre>
+                      ) : (
+                        <p className="text-gray-500">No hay datos para mostrar.</p>
+                      )}
+                      <div className="flex justify-end pt-4">
+                        <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+                          Cerrar
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
+            </div>
+
+            <div className="flex justify-center space-x-4 mt-8">
               <Button variant="outline" onClick={onCancel}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Cancelar
@@ -461,41 +612,83 @@ export default function EvaluationTaker({ evaluation, onComplete, onCancel }: Ev
       {/* Question Card */}
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <CardTitle className="text-lg mb-2">
-                Pregunta {currentQuestionIndex + 1}
-                {flaggedQuestions.has(currentQuestion.id) && <Flag className="h-4 w-4 inline ml-2 text-yellow-600" />}
-              </CardTitle>
-              <CardDescription className="text-base">{currentQuestion.text}</CardDescription>
+          {questions.length > 0 ? (
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <CardTitle className="text-lg mb-2">
+                  Pregunta {currentQuestionIndex + 1}
+                  {flaggedQuestions.has(questions[currentQuestionIndex]?.id) && <Flag className="h-4 w-4 inline ml-2 text-yellow-600" />}
+                </CardTitle>
+                <CardDescription className="text-base">{questions[currentQuestionIndex]?.text}</CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant="outline">{questions[currentQuestionIndex]?.points} pts</Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleFlag}
+                  className={flaggedQuestions.has(questions[currentQuestionIndex]?.id) ? "text-yellow-600" : ""}
+                >
+                  <Flag className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline">{currentQuestion.points} pts</Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleFlag}
-                className={flaggedQuestions.has(currentQuestion.id) ? "text-yellow-600" : ""}
-              >
-                <Flag className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          ) : (
+            <div className="text-center text-gray-500">No hay preguntas disponibles.</div>
+          )}
         </CardHeader>
         <CardContent>
-          <RadioGroup
-            value={answers[currentQuestion.id]?.toString() || ""}
-            onValueChange={(value) => handleAnswer(Number.parseInt(value))}
-          >
-            {currentQuestion.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                  {option}
-                </Label>
+          {questions.length > 0 && questions[currentQuestionIndex]?.type === "multiple-choice" && (
+            <RadioGroup
+              value={(() => {
+                // Si la respuesta es un número y las opciones existen, mostrar el índice
+                const ans = answers[questions[currentQuestionIndex].id]
+                if (typeof ans === "number" && questions[currentQuestionIndex].options) {
+                  return ans.toString()
+                }
+                // Si la respuesta es texto, buscar el índice correspondiente
+                if (typeof ans === "string" && questions[currentQuestionIndex].options) {
+                  const idx = questions[currentQuestionIndex].options.findIndex(o => o === ans)
+                  return idx >= 0 ? idx.toString() : ""
+                }
+                return ""
+              })()}
+              onValueChange={(value) => {
+                const idx = Number.parseInt(value)
+                const opts = questions[currentQuestionIndex].options
+                // Si las opciones existen y el índice es válido, guardar el texto como respuesta
+                if (opts && opts[idx] !== undefined) {
+                  handleAnswer(opts[idx])
+                } else {
+                  handleAnswer(idx)
+                }
+              }}
+            >
+              {questions[currentQuestionIndex].options?.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                  <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          )}
+          {questions.length > 0 && questions[currentQuestionIndex]?.type === "true-false" && (
+            <RadioGroup
+              value={answers[questions[currentQuestionIndex].id]?.toString() || ""}
+              onValueChange={(value) => handleAnswer(value === "1" ? 1 : 0)}
+            >
+              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                <RadioGroupItem value="1" id="true-option" />
+                <Label htmlFor="true-option" className="flex-1 cursor-pointer">Verdadero</Label>
               </div>
-            ))}
-          </RadioGroup>
+              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                <RadioGroupItem value="0" id="false-option" />
+                <Label htmlFor="false-option" className="flex-1 cursor-pointer">Falso</Label>
+              </div>
+            </RadioGroup>
+          )}
         </CardContent>
       </Card>
 

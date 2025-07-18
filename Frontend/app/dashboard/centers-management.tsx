@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -42,55 +43,57 @@ interface Center {
 }
 
 export default function CentersManagement() {
+  const { toast } = useToast()
+  // Datos estáticos de universidades de Piura
   const [centers, setCenters] = useState<Center[]>([
     {
       id: 1,
-      name: "Centro de Capacitación Lima Norte",
-      description: "Centro especializado en tecnologías de la información y desarrollo web",
-      address: "Av. Túpac Amaru 1234",
-      city: "Lima",
-      region: "Lima",
-      phone: "+51 1 234-5678",
-      email: "lima.norte@skillcertify.pe",
-      director: "María González",
-      capacity: 200,
-      studentsCount: 156,
+      name: "Universidad de Piura",
+      description: "Universidad privada reconocida por su excelencia académica.",
+      address: "Av. Ramón Mugica 131, Piura",
+      city: "Piura",
+      region: "Piura",
+      phone: "(073) 284500",
+      email: "info@udep.edu.pe",
+      director: "Dr. Antonio Abruña",
+      capacity: 5000,
+      studentsCount: 4200,
       status: "Activo",
-      createdAt: "2024-01-15",
-      updatedAt: "2024-01-20",
+      createdAt: "2020-01-01T08:00:00Z",
+      updatedAt: "2025-07-18T10:00:00Z"
     },
     {
       id: 2,
-      name: "Centro de Capacitación Arequipa",
-      description: "Centro enfocado en diseño gráfico y marketing digital",
-      address: "Calle Mercaderes 456",
-      city: "Arequipa",
-      region: "Arequipa",
-      phone: "+51 54 987-6543",
-      email: "arequipa@skillcertify.pe",
-      director: "Carlos Mendoza",
-      capacity: 150,
-      studentsCount: 89,
+      name: "Universidad Nacional de Piura",
+      description: "Institución pública líder en investigación y formación profesional.",
+      address: "Av. Juan Pablo II s/n, Piura",
+      city: "Piura",
+      region: "Piura",
+      phone: "(073) 307700",
+      email: "contacto@unp.edu.pe",
+      director: "Dr. César Reyes Peña",
+      capacity: 8000,
+      studentsCount: 7500,
       status: "Activo",
-      createdAt: "2024-01-10",
-      updatedAt: "2024-01-18",
+      createdAt: "2018-03-15T08:00:00Z",
+      updatedAt: "2025-07-18T10:00:00Z"
     },
     {
       id: 3,
-      name: "Centro de Capacitación Cusco",
-      description: "Centro de formación en análisis de datos y business intelligence",
-      address: "Plaza de Armas 789",
-      city: "Cusco",
-      region: "Cusco",
-      phone: "+51 84 456-7890",
-      email: "cusco@skillcertify.pe",
-      director: "Ana Quispe",
-      capacity: 100,
-      studentsCount: 67,
+      name: "Universidad Católica de Piura",
+      description: "Universidad privada con enfoque en valores y formación integral.",
+      address: "Calle Los Educadores 123, Piura",
+      city: "Piura",
+      region: "Piura",
+      phone: "(073) 400123",
+      email: "admision@ucp.edu.pe",
+      director: "Dra. María López",
+      capacity: 2000,
+      studentsCount: 1800,
       status: "Activo",
-      createdAt: "2024-01-05",
-      updatedAt: "2024-01-15",
-    },
+      createdAt: "2019-05-10T08:00:00Z",
+      updatedAt: "2025-07-18T10:00:00Z"
+    }
   ])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -170,34 +173,54 @@ export default function CentersManagement() {
     setIsDialogOpen(true)
   }
 
-  const handleSaveCenter = () => {
+  const handleSaveCenter = async () => {
+    let success = false
+    let errorMsg = ""
     if (editingCenter) {
-      // Actualizar centro existente
-      setCenters((prev) =>
-        prev.map((center) =>
-          center.id === editingCenter.id ? { ...center, ...formData, updatedAt: new Date().toISOString() } : center,
-        ),
-      )
-    } else {
-      // Crear nuevo centro
-      const newCenter: Center = {
-        id: Date.now(),
-        ...formData,
-        studentsCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      // Actualizar centro existente en el backend
+      const res = await fetch(`/api/centers/${editingCenter.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setCenters((prev) => prev.map((center) => center.id === updated.id ? updated : center))
+        success = true
+      } else {
+        errorMsg = "No se pudo actualizar el centro."
       }
-      setCenters((prev) => [newCenter, ...prev])
+    } else {
+      // Crear nuevo centro en el backend
+      const res = await fetch("/api/centers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      if (res.ok) {
+        const created = await res.json()
+        setCenters((prev) => [created, ...prev])
+        success = true
+      } else {
+        errorMsg = "No se pudo crear el centro."
+      }
     }
-
     setIsDialogOpen(false)
-    setShowSuccess(true)
+    setShowSuccess(success)
     setTimeout(() => setShowSuccess(false), 3000)
+    if (success) {
+      toast({ title: "Centro guardado", description: "El centro se guardó correctamente.", variant: "default" })
+    } else {
+      toast({ title: "Error", description: errorMsg || "Ocurrió un error al guardar el centro.", variant: "destructive" })
+    }
   }
 
-  const handleDeleteCenter = (id: number) => {
+  const handleDeleteCenter = async (id: number) => {
     if (confirm("¿Estás seguro de que deseas eliminar este centro?")) {
-      setCenters((prev) => prev.filter((center) => center.id !== id))
+      const res = await fetch(`/api/centers/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        setCenters((prev) => prev.filter((center) => center.id !== id))
+      }
     }
   }
 
@@ -381,7 +404,7 @@ export default function CentersManagement() {
               <Label htmlFor="name">Nombre del Centro</Label>
               <Input
                 id="name"
-                value={formData.name}
+                value={formData.name || ""}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ej: Centro Lima Norte"
               />
@@ -391,7 +414,7 @@ export default function CentersManagement() {
               <Label htmlFor="director">Director</Label>
               <Input
                 id="director"
-                value={formData.director}
+                value={formData.director || ""}
                 onChange={(e) => setFormData({ ...formData, director: e.target.value })}
                 placeholder="Nombre del director"
               />
@@ -401,7 +424,7 @@ export default function CentersManagement() {
               <Label htmlFor="description">Descripción</Label>
               <Textarea
                 id="description"
-                value={formData.description}
+                value={formData.description || ""}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe las especialidades y características del centro"
                 rows={3}
@@ -412,7 +435,7 @@ export default function CentersManagement() {
               <Label htmlFor="address">Dirección</Label>
               <Input
                 id="address"
-                value={formData.address}
+                value={formData.address || ""}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 placeholder="Dirección completa"
               />
@@ -422,7 +445,7 @@ export default function CentersManagement() {
               <Label htmlFor="city">Ciudad</Label>
               <Input
                 id="city"
-                value={formData.city}
+                value={formData.city || ""}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 placeholder="Ciudad"
               />
@@ -448,7 +471,7 @@ export default function CentersManagement() {
               <Label htmlFor="phone">Teléfono</Label>
               <Input
                 id="phone"
-                value={formData.phone}
+                value={formData.phone || ""}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+51 1 234-5678"
               />
@@ -459,7 +482,7 @@ export default function CentersManagement() {
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
+                value={formData.email || ""}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="centro@skillcertify.pe"
               />
@@ -470,8 +493,8 @@ export default function CentersManagement() {
               <Input
                 id="capacity"
                 type="number"
-                value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: Number.parseInt(e.target.value) })}
+                value={formData.capacity || 0}
+                onChange={(e) => setFormData({ ...formData, capacity: Number.isNaN(Number(e.target.value)) ? 0 : Number(e.target.value) })}
                 min="10"
                 max="1000"
               />
@@ -480,7 +503,7 @@ export default function CentersManagement() {
             <div className="space-y-2">
               <Label htmlFor="status">Estado</Label>
               <Select
-                value={formData.status}
+                value={formData.status || "Activo"}
                 onValueChange={(value: "Activo" | "Inactivo") => setFormData({ ...formData, status: value })}
               >
                 <SelectTrigger>
