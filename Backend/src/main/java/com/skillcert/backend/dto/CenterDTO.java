@@ -1,16 +1,7 @@
-package com.skillcert.backend.entity;
+package com.skillcert.backend.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
-@Entity
-public class Center {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class CenterDTO {
     private Long id;
-
     private String name;
     private String location;
 
