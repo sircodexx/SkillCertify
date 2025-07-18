@@ -57,4 +57,9 @@ public class Question {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public List<QuestionOption> getOptions() {
+        return options;
+    }
+    
 }
