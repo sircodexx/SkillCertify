@@ -7,12 +7,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+import java.util.List;
+@Table(name = "categories")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "categories")
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,8 +24,8 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
-    private Integer orderIndex;
+    @Column(nullable = false, name = "order_index") // Mapeado a order_index en DB
+    private Integer orderIndex; // Cambiado de 'order' a 'orderIndex'
 
     private String color;
     private String icon;
@@ -34,14 +34,24 @@ public class Category {
     @JoinColumn(name = "prerequisite_category_id")
     private Category prerequisiteCategory;
 
-    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status = Status.ACTIVE;
+    @Builder.Default
+    private CategoryStatus status = CategoryStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+
+    
+    private List<Evaluation> evaluations;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // Método getter para evaluations (Lombok a veces tiene problemas con esto)
+    public List<Evaluation> getEvaluations() {
+        return evaluations;
+    }
 }
