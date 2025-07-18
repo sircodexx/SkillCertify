@@ -3,6 +3,7 @@ package com.skillcert.backend.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,8 @@ import com.skillcert.backend.dto.AttemptDTO;
 import com.skillcert.backend.dto.AttemptResultDTO;
 import com.skillcert.backend.service.AttemptService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/attempts")
 public class AttemptController {
@@ -24,14 +27,16 @@ public class AttemptController {
     private AttemptService service;
 
     @PostMapping
-    public AttemptDTO create(@RequestBody AttemptDTO dto) {
+    public AttemptDTO create(@Valid @RequestBody AttemptDTO dto) {
         return service.createAttempt(dto);
     }
 
     @GetMapping("/{id}")
-    public AttemptDTO getById(@PathVariable Long id) {
-        return service.getAttemptById(id);
+    public ResponseEntity<AttemptDTO> getById(@PathVariable Long id) {
+        AttemptDTO attempt = service.getAttemptById(id);
+            return ResponseEntity.ok(attempt);
     }
+    
 
     @PutMapping("/{id}")
     public AttemptDTO update(@PathVariable Long id, @RequestBody AttemptDTO dto) {
