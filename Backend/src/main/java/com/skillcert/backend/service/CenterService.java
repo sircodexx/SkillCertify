@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.skillcert.backend.dto.CenterDTO;
 import com.skillcert.backend.dto.EvaluationAssignmentDTO;
+import com.skillcert.backend.dto.EvaluationDTO;
+import com.skillcert.backend.dto.StudentDTO;
 
 public interface CenterService {
     List<CenterDTO> getAllCenters();
@@ -12,7 +14,7 @@ public interface CenterService {
     CenterDTO createCenter(CenterDTO centerDTO);
     CenterDTO updateCenter(Long id, CenterDTO centerDTO);
     void deleteCenter(Long id);
-    List<String> getStudentsByCenterId(Long centerId); // Placeholder
-    List<String> getEvaluationsByCenterId(Long centerId); // Placeholder
-    void assignEvaluationToCenter(Long centerId, EvaluationAssignmentDTO evalDTO); // Placeholder
+    List<StudentDTO> getStudentsDTOByCenterId(Long centerId);
+    List<EvaluationDTO> getEvaluationsDTOByCenterId(Long centerId);
+    void assignEvaluationToCenter(Long centerId, EvaluationAssignmentDTO evalDTO);
 }
