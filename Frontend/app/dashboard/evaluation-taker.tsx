@@ -169,26 +169,10 @@ export default function EvaluationTaker({ evaluation, userId, onComplete, onCanc
     }
   };
 
-  const [questions, setQuestions] = useState<Question[]>(getStaticQuestions(evaluation.id));
-  const [loadingQuestions, setLoadingQuestions] = useState(false)
-  const [noQuestions, setNoQuestions] = useState(false)
-
-  // Consultar preguntas de la evaluación al montar el componente
-  useEffect(() => {
-    setLoadingQuestions(true)
-    fetch(`/api/evaluations/${evaluation.id}/questions`)
-      .then((res) => res.json())
-      .then((data) => {
-        setQuestions(Array.isArray(data) ? data : [])
-        setNoQuestions(!Array.isArray(data) || data.length === 0)
-        setLoadingQuestions(false)
-      })
-      .catch(() => {
-        setQuestions([])
-        setNoQuestions(true)
-        setLoadingQuestions(false)
-      })
-  }, [evaluation.id])
+  // Preguntas estáticas por evaluación
+  const [questions] = useState<Question[]>(getStaticQuestions(evaluation.id));
+  const loadingQuestions = false;
+  const noQuestions = questions.length === 0;
 
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100
   const answeredQuestions = Object.keys(answers).length
